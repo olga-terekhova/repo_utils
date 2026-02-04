@@ -7,9 +7,9 @@ param (
     [Alias("p")][string]$paramPath
 )
 
-# Default to ./Params.ps1 if not provided
+# Default to "../config/_Params-Working-Repo.json" if not provided
 if (-not $paramPath) {
-    $paramPath = Join-Path -Path $PSScriptRoot -ChildPath "_Params-Sync-Repo.ps1"
+    $paramPath = Join-Path -Path $PSScriptRoot -ChildPath "../config/_Params-Working-Repo.json"
 }
 
 # Check if parameter file exists
@@ -18,15 +18,10 @@ if (-not (Test-Path $paramPath)) {
     exit 1
 }
 
-# Source the parameter file to get $RepoPath and $PushCommand
-. $paramPath
+$paramJson = Get-Content $paramPath -Raw | ConvertFrom-Json
 
-# Ensure variables are set
-if (-not ($RepoPath -and $PushCommand)) {
-    Write-Error "One or more required parameters are missing in $paramPath"
-    exit 1
-}
-
+$RepoPath = $paramJson.repoRoot
+$PushCommands = $paramJson.repoSettings.repoPushCommands
 
 #
 # --- EXECUTION ---
@@ -82,9 +77,55 @@ function Invoke-GitCommit {
 
 # Function: Git Push
 function Invoke-GitPush {
-    $fullCommand = $PushCommand
+    # Split the Git commands string by ";"
+    $commandArray = $PushCommands -split ';'
+
+    $commandIndex = 0
+    foreach ($command in $commandArray) {
+        $commandIndex++
+        
+        # Trim whitespace from the command
+        $command = $command.Trim()
+        
+        # Skip empty commands
+        if ([string]::IsNullOrWhiteSpace($command)) {
+            continue
+        }
+        
+        # Prepend "git " to the substring to produce $fullCommand
+        $fullCommand = "git $command"
+        
+        # Display the command being executed
+        Write-Host "`n[$(Get-Date -Format 'HH:mm:ss')] $fullCommand" -ForegroundColor Cyan
+        
+        try {
+            # Execute the command
+            Invoke-Expression $fullCommand | Out-Default
+            
+            # Check if the command was successful
+            if ($LASTEXITCODE -ne 0 -and $null -ne $LASTEXITCODE) {
+                Write-Host "`nERROR: Command failed with exit code $LASTEXITCODE" -ForegroundColor Red
+                Write-Host "Command: $fullCommand" -ForegroundColor Red
+                Write-Host "Stopping execution of remaining commands." -ForegroundColor Yellow
+                break
+            }
+            
+            Write-Host "[SUCCESS] Command completed successfully" -ForegroundColor Green
+            
+        } catch {
+            Write-Host "`nERROR: Command execution failed" -ForegroundColor Red
+            Write-Host "Command: $fullCommand" -ForegroundColor Red
+            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "Stopping execution of remaining commands." -ForegroundColor Yellow
+            break
+        }
+    }
+
+
+    $fullCommand = $PushCommands # to change
     Write-Host "`n[$(Get-Date -Format 'HH:mm:ss')] $fullCommand "  -ForegroundColor Cyan
-    Invoke-Expression $fullCommand | Out-Default
+    # Invoke-Expression $fullCommand | Out-Default
+    Write-Host "Placeholder"
 }
 
 # Function: Ask for confirmation
@@ -172,7 +213,7 @@ function Invoke-GitWorkflow {
         "P" {
             
 	    Write-Host "`nCommited changes will be pushed using these commands: "
-	    Write-Host "  $PushCommand"  -ForegroundColor Yellow
+	    Write-Host "  $PushCommands"  -ForegroundColor Yellow
 
             if (-not (Get-Confirmation "Proceed with pushing?")) {
                 Write-Host "Operation cancelled."
