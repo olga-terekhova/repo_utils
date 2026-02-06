@@ -161,7 +161,7 @@ function Invoke-GitWorkflow {
 	}
         "A" {
             Invoke-GitAdd
-	    Invoke-GitStatus
+	        Invoke-GitStatus
             
             if (-not (Get-Confirmation "Proceed with committing?")) {
                 Write-Host "Operation cancelled."
@@ -171,29 +171,27 @@ function Invoke-GitWorkflow {
             if (-not (Invoke-GitCommit)) {
                 return $true
             }
-	    Invoke-GitStatus            
+	        Invoke-GitStatus            
 	    
-	    Write-Host "`nCommited changes will be pushed using these commands: "
-	    Write-Host "  $PushCommands"  -ForegroundColor Yellow
-            
-	    if (-not (Get-Confirmation "Proceed with pushing?")) {
-                Write-Host "Operation cancelled."
-                return $true
-            }
-            
+            Write-Host "`nCommited changes will be pushed using these commands: "
+            Write-Host "  $PushCommands"  -ForegroundColor Yellow
+                
+            if (-not (Get-Confirmation "Proceed with pushing?")) {
+                    Write-Host "Operation cancelled."
+                    return $true
+                }
+                
             Invoke-GitPush
-
-            Write-Host "`nAll operations completed successfully!"
-	    Invoke-GitStatus 
+            Invoke-GitStatus 
         }
         "C" {
             if (-not (Invoke-GitCommit)) {
                 return $true
             }
-	    Invoke-GitStatus
-            
-	    Write-Host "`nCommited changes will be pushed using these commands: "
-	    Write-Host "  $PushCommands"  -ForegroundColor Yellow
+            Invoke-GitStatus
+                
+            Write-Host "`nCommited changes will be pushed using these commands: "
+            Write-Host "  $PushCommands"  -ForegroundColor Yellow
 
             if (-not (Get-Confirmation "Proceed with pushing?")) {
                 Write-Host "Operation cancelled."
@@ -201,24 +199,20 @@ function Invoke-GitWorkflow {
             }
             
             Invoke-GitPush
-
-            Write-Host "`nAll operations completed successfully!"
-	    Invoke-GitStatus 
+	        Invoke-GitStatus 
         }
         "P" {
             
-	    Write-Host "`nCommited changes will be pushed using these commands: "
-	    Write-Host "  $PushCommands"  -ForegroundColor Yellow
+            Write-Host "`nCommited changes will be pushed using these commands: "
+            Write-Host "  $PushCommands"  -ForegroundColor Yellow
 
             if (-not (Get-Confirmation "Proceed with pushing?")) {
                 Write-Host "Operation cancelled."
                 return $true
             }
 
-	    Invoke-GitPush
-            Write-Host "`nPush completed successfully!"
-
-	    Invoke-GitStatus
+	        Invoke-GitPush
+	        Invoke-GitStatus
         }
         default {
             Write-Host "Invalid option."
