@@ -3,29 +3,51 @@ Utilities to automate operations over local git repositories.
 
 ## why this exists
 
-Working with multiple git repositories locally involves executing highly repetitive routine steps, typically clustered around:
+Working with multiple git repositories locally involves executing **highly repetitive routine steps**, typically clustered around:
 
-- **Initial repository setup** – configuring local git parameters and user identity
-- **Review-add-commit-push cycles** – completing blocks of work
+- Initial repository setup – configuring local user identity and git parameters 
+- Review-add-commit-push cycles – completing blocks of work
 
-Most routine steps are chains of git commands. Some workflows also benefit from copying files in or out of the repository before committing – for example, version controlling Google Colab notebooks stored in Google Drive.  
+Most routine steps are chains of **git commands**. Some workflows also benefit from **copying files** in or out of the repository before committing - for example, version controlling Google Colab notebooks stored in Google Drive.  
 
-**These routine steps aren't semantically part of the project itself. They represent the workflow preferences of individuals working on the project.**  
+Semantically, these routine steps are **not part of the project** itself. They represent the workflow preferences of individuals working on the project.  
 
-The **repo-utils** project stores and executes these repeatable automations over a local git repository. It's particularly valuable for:
+The **repo-utils** project stores and executes these **configurable repeatable automations over a local git repository**. It's particularly valuable for:
 
-- **Multi-repository workflows** – managing multiple projects with different git configurations (different user identities, push targets, or automation steps)
-- **Notebook-centric development** – automatically syncing and cleaning Jupyter notebooks before commits, keeping diffs focused on code changes rather than output noise
-- **Complex push workflows** – pushing to multiple remotes or branches in a single command
-- **Repository-as-context** – working on a sub-project within a larger repository without polluting the parent's git history
+- **Unobtrusive run of helper utilities**:
+    - blends into a larger repository as a sub-repository without polluting the parent's git history
+- **Git workflows automation**:
+    - sets up multiple projects with different git configurations (user identities, line endings, default branch)
+    - automates repetitive chains of git commands (status, add, commit, push)
+- **Notebook-centric development**:
+    - automatically syncs Jupyter notebooks, simplifying integration with Google Colab as explained in [git-gdrive-sync](https://github.com/olga-terekhova/git-gdrive-sync)
+    - cleans the notebooks before commits, removing cell outputs and execution counts from git diffs 
 
 Repo-utils operates in two modes:
 
 - **Attached mode** – repo-utils connects to another repository (the host) and runs procedures over the host. The host repository doesn't see or track repo-utils.
 - **Detached mode** – repo-utils operates standalone, running procedures over itself. It tracks itself and allows committing changes to the repo-utils repository.
 
-Repo-utils maintains separate settings for itself and for host repositories.  
+Repo-utils maintains separate settings for itself and for the host.  
 
 **Suggested workflow:**  
-1. In attached mode, configure settings for the host repository and use repo-utils to run automated procedures.
-2. When you need to modify or evolve the procedures, detach repo-utils, implement and commit changes, then reattach it.
+1. **Fork this repository.**:
+    - Your fork will serve as the central repository where you'll maintain your customized automation scripts and configurations.
+    - You'll deploy shallow clones of this fork to individual projects while maintaining the full repository for development.
+2. **Use automations on other projects:**
+    - Shallow clone your fork into the target project:
+        ```
+        git clone --depth 1 [your-fork-url]
+        ```
+    - Run `.\config\Assume-Attached.ps1` (one-time setup) 
+    - Run `.\config\Config-WorkRepo.ps1` (one-time configuration)
+    - Run `.\scripts\Sync-All.ps1` for regular automations over the host repository
+2. **Extend repo-utils functionality:**
+    - Clone your fork into a dedicated folder  (optionally within a test repository) 
+    - Run `.\config\Assume-Detached.ps1` (one-time setup) 
+    - Run `.\config\Config-WorkRepo.ps1` (one-time configuration)
+    - Implement and test changes  
+    - Switch between attached mode (testing) and detached mode (committing changes)
+    - Run `.\scripts\Sync-All.ps1` to commit changes to your repo-utils fork 
+
+
